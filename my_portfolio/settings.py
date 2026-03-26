@@ -131,9 +131,8 @@ REST_FRAMEWORK = {
 # Use the 'DATABASE_URL' environment variable provided by Render
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        ssl_require=True
+        default=config('DATABASE_URL', default=f"sqlite:///{BASE_DIR}/db.sqlite3"),
+        conn_max_age=0
     )
 }
 
