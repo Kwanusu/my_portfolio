@@ -128,13 +128,55 @@ REST_FRAMEWORK = {
 #     }
 # }
 
-# Use the 'DATABASE_URL' environment variable provided by Render
-DATABASES = {
-    'default': dj_database_url.config(
-        default=config('DATABASE_URL', default=f"sqlite:///{BASE_DIR}/db.sqlite3"),
-        conn_max_age=0
-    )
-}
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Pull individual components (This avoids the ParseError)
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT", "5432")
+
+if all([DB_NAME, DB_USER, DB_PASSWORD, DB_HOST]):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': DB_NAME,
+            'USER': DB_USER,
+            'PASSWORD': DB_PASSWORD, 
+            'HOST': DB_HOST,
+            'PORT': DB_PORT,
+            'OPTIONS': {
+                'sslmode': 'require',
+            },
+            'CONN_MAX_AGE': 60,
+        }
+    }
+else:
+    # Local fallback so your app doesn't crash if .env isn't loaded
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+# Fix for ALLOWED_HOSTS (Render names should not include https://)
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'my-portfolio-xcyt.onrender.com']
+if os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
+    ALLOWED_HOSTS.append(os.environ.get('RENDER_EXTERNAL_HOSTNAME'))
+
+# ... other settings for static files and security (DEBUG=False in production) ...
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 # .env or settings.py
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
