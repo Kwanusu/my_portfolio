@@ -27,3 +27,5 @@ six==1.17.0
 sqlparse==0.5.5
 tzdata==2025.3
 urllib3==2.6.3
+dotenv==0.9.9
+python-dotenv==1.2.2
